@@ -86,6 +86,7 @@ def _register() -> None:
 		administrative_area,
 		attachment,
 		change_request,
+		charts,
 		draft,
 		grievance,
 		profile,

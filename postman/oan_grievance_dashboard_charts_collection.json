@@ -1,13 +1,24 @@
 {
   "info": {
     "name": "Grievance Dashboard Service",
-    "description": "Aggregate chart data for the OAN programme dashboards: GET /api/v1/charts/{chart_id}.\n\nPublic: no Authorization header is sent. Rows are counts only, never a ticket number, a title, a submitter or any grievance text. Data comes from rollup tables the scheduler rebuilds every 15 minutes, and each response carries `meta.as_of`, the time of that refresh. Calls are rate limited per IP.\n\nFilters (all optional): `region` (comma-separated Region P-codes, e.g. ET04), `service_category` or `category`, `from` / `to` (YYYY-MM-DD), `month` (YYYY-MM), `granularity` (`month` or `week`). An unknown value is a 400 naming the field.\n\nThe admin endpoint (GET /api/v1/charts?charts=..., Grievance Admin) is not part of this collection. See docs/dashboard-analytics.md.",
+    "description": "Aggregate chart data for the OAN programme dashboards: GET /api/v1/charts/{chart_id}.\n\nPublic: no Authorization header is sent. Rows are counts only, never a ticket number, a title, a submitter or any grievance text. Data comes from rollup tables the scheduler rebuilds every 15 minutes, and each response carries `meta.as_of`, the time of that refresh. Calls are rate limited per IP.\n\nFilters (all optional): `region` (comma-separated Region P-codes, e.g. ET04), `service_category` or `category`, `from` / `to` (YYYY-MM-DD), `month` (YYYY-MM), `granularity` (`month` or `week`). An unknown value is a 400 naming the field.\n\nThe admin endpoint (GET /api/v1/charts?charts=..., Grievance Admin) is not part of this collection. See docs/dashboard-analytics.md.\n\nAuth: public today. Once the Kong gateway enforces authorization, the charts need the OAN dashboards' API key (consumer `oan-dashboards`) in the `apikey` header: set `dashboard_api_key` in your own environment (current value only) and the collection sends it.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
     "type": "noauth"
   },
   "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Sent only when set: public routes ignore it, the gateway needs it once it enforces keys.",
+          "const key = pm.variables.get('dashboard_api_key');",
+          "if (key) pm.request.headers.upsert({ key: 'apikey', value: key });"
+        ]
+      }
+    },
     {
       "listen": "test",
       "script": {
@@ -278,6 +289,10 @@
     {
       "key": "grievance_to",
       "value": "2026-09-30"
+    },
+    {
+      "key": "dashboard_api_key",
+      "value": ""
     }
   ]
 }

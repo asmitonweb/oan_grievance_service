@@ -28,7 +28,10 @@ before_request = ["oan_grievance_service.api.router.ensure_routes_registered"]
 # are seeded so a fresh site comes up usable.
 
 after_install = "oan_grievance_service.setup.install.after_install"
-after_migrate = "oan_grievance_service.setup.install.after_migrate"
+after_migrate = [
+	"oan_grievance_service.setup.install.after_migrate",
+	"oan_grievance_service.services.dashboard_rollup.ensure_built",
+]
 
 # Permissions
 # ------------------
@@ -95,6 +98,15 @@ scheduler_events = {
 	],
 	"daily": [
 		"oan_grievance_service.tasks.purge_expired_drafts",
+	],
+	# The dashboards read only these rollups, so this is how fresh they are.
+	"cron": {
+		"*/15 * * * *": [
+			"oan_grievance_service.tasks.refresh_dashboard_rollup",
+		],
+	},
+	"daily_long": [
+		"oan_grievance_service.tasks.rebuild_dashboard_rollup",
 	],
 }
 

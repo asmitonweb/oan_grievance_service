@@ -1,0 +1,137 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-09-30 16:00:00.000000",
+ "description": "Dashboard rollup: open and closed grievance counts as they stood on a day. Today's rows are replaced on every refresh; earlier days are kept as history.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "snapshot_date",
+  "status",
+  "region",
+  "service_category",
+  "assigned_dept",
+  "escalated",
+  "sla_state",
+  "sec_counts",
+  "grievance_count",
+  "dup_pending_count",
+  "oldest_open_creation"
+ ],
+ "fields": [
+  {
+   "fieldname": "snapshot_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Snapshot Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status"
+  },
+  {
+   "description": "P-code of the Region the case was filed under; empty when the area sits under no Region.",
+   "fieldname": "region",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Region"
+  },
+  {
+   "fieldname": "service_category",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Service Category",
+   "options": "Grievance Service Category"
+  },
+  {
+   "fieldname": "assigned_dept",
+   "fieldtype": "Link",
+   "label": "Assigned Department",
+   "options": "Grievance Department"
+  },
+  {
+   "fieldname": "escalated",
+   "fieldtype": "Check",
+   "label": "Escalated"
+  },
+  {
+   "description": "Open cases only: breached is past its due date, at_risk is due within 24 hours, paused waits on the submitter.",
+   "fieldname": "sla_state",
+   "fieldtype": "Select",
+   "label": "SLA State",
+   "options": "\nok\nat_risk\nbreached\npaused\nno_sla"
+  },
+  {
+   "fieldname": "sec_counts",
+   "fieldtype": "Section Break",
+   "label": "Counts"
+  },
+  {
+   "fieldname": "grievance_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Grievances"
+  },
+  {
+   "fieldname": "dup_pending_count",
+   "fieldtype": "Int",
+   "label": "Awaiting Duplicate Review"
+  },
+  {
+   "description": "Earliest filing among the open, non-escalated cases in this row.",
+   "fieldname": "oldest_open_creation",
+   "fieldtype": "Datetime",
+   "label": "Oldest Open Filed On"
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-09-30 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Grievance Management",
+ "name": "Grievance Stat Snapshot",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 0,
+   "cancel": 0,
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 0,
+   "submit": 0,
+   "write": 0
+  },
+  {
+   "amend": 0,
+   "cancel": 0,
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Grievance Admin",
+   "share": 0,
+   "submit": 0,
+   "write": 0
+  }
+ ],
+ "read_only": 1,
+ "row_format": "Dynamic",
+ "sort_field": "snapshot_date",
+ "sort_order": "DESC",
+ "states": []
+}

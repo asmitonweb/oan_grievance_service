@@ -62,6 +62,11 @@ also takes `assigned_dept` and `limit`. An unknown value is a 400 naming the fie
 Each public chart is its own literal route, because the JWT middleware exempts guest routes
 by exact path; an admin-only or unknown chart id is therefore never reachable without a token.
 
+**Through the gateway.** The public chart routes are guest to the platform, but the spec marks them
+`DashboardKeyAuth`: once Kong enforces authorization, it requires the OAN dashboards' API key
+(consumer `oan-dashboards`, group `dashboards`) and strips it before forwarding. The dashboards
+already send the key when configured; until the gateway enforces keys the header is ignored.
+
 Public charts: `grvKpis`, `grvPerformanceKpis`, `grvMonthlyTrend`, `grvWeeklyTrend`,
 `grvNetBacklogTrend`, `grvStatusDistribution`, `grvByCategory`, `grvCategoryResolution`,
 `grvResolutionRateByRegion`, `grvSlaRisk`, `grvPendingDuplicates`, `grvOldestOpen` (age only),

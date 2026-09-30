@@ -2413,7 +2413,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvKpis
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvPerformanceKpis:
     get:
       tags:
@@ -2466,7 +2467,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvPerformanceKpis
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvMonthlyTrend:
     get:
       tags:
@@ -2519,7 +2521,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvMonthlyTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvWeeklyTrend:
     get:
       tags:
@@ -2572,7 +2575,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvWeeklyTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvNetBacklogTrend:
     get:
       tags:
@@ -2625,7 +2629,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvStatusDistribution:
     get:
       tags:
@@ -2678,7 +2683,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvStatusDistribution
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvByCategory:
     get:
       tags:
@@ -2731,7 +2737,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvByCategory
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvCategoryResolution:
     get:
       tags:
@@ -2784,7 +2791,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvCategoryResolution
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvResolutionRateByRegion:
     get:
       tags:
@@ -2837,7 +2845,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvResolutionRateByRegion
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvSlaRisk:
     get:
       tags:
@@ -2890,7 +2899,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvSlaRisk
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvPendingDuplicates:
     get:
       tags:
@@ -2943,7 +2953,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvPendingDuplicates
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvOldestOpen:
     get:
       tags:
@@ -2996,7 +3007,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvOldestOpen
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvFilterRegions:
     get:
       tags:
@@ -3049,7 +3061,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvFilterRegions
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvFilterCategories:
     get:
       tags:
@@ -3102,7 +3115,8 @@ paths:
       - *id005
       - *id006
       x-legacy-rpc-method: oan_grievance_service.api.v1.charts.get_public_chart_grvFilterCategories
-      security: []
+      security:
+      - DashboardKeyAuth: []
 components:
   securitySchemes:
     BearerAuth:
@@ -3110,6 +3124,13 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Provide JWT access token as `Bearer <token>` in the Authorization header.
+    DashboardKeyAuth:
+      type: apiKey
+      in: header
+      name: apikey
+      description: API key of the OAN dashboards (Kong consumer `oan-dashboards`, group `dashboards`).
+        Checked and stripped by the gateway; the platform itself treats the chart routes as public, so
+        before the gateway enforces keys the header is simply ignored.
   schemas:
     ApiMeta:
       type: object

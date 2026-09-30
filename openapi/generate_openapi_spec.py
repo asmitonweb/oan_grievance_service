@@ -1668,7 +1668,12 @@ def build_openapi() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
 				op["parameters"] = parameters
 
 			op["x-legacy-rpc-method"] = legacy_target
-			op["security"] = [] if allow_guest else [{"BearerAuth": []}]
+			# The public chart routes are guest to the platform, but the gateway asks the
+			# OAN dashboards for their key (DashboardKeyAuth) once it enforces auth.
+			if func_name.startswith("get_public_chart_"):
+				op["security"] = [{"DashboardKeyAuth": []}]
+			else:
+				op["security"] = [] if allow_guest else [{"BearerAuth": []}]
 
 			# Request body for mutation methods
 			if method in ("POST", "PUT", "PATCH", "DELETE") and req_schema_name:
@@ -1742,7 +1747,13 @@ def build_openapi() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
 					"scheme": "bearer",
 					"bearerFormat": "JWT",
 					"description": "Provide JWT access token as `Bearer <token>` in the Authorization header.",
-				}
+				},
+				"DashboardKeyAuth": {
+					"type": "apiKey",
+					"in": "header",
+					"name": "apikey",
+					"description": "API key of the OAN dashboards (Kong consumer `oan-dashboards`, group `dashboards`). Checked and stripped by the gateway; the platform itself treats the chart routes as public, so before the gateway enforces keys the header is simply ignored.",
+				},
 			},
 			"schemas": components_schemas,
 		},

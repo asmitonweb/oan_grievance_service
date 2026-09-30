@@ -362,3 +362,54 @@ class TestResolutionAndEscalationStamps(FrappeTestCase):
 		)
 		backfill_resolved_and_escalated_at.execute()
 		self.assertIsNotNone(frappe.db.get_value("Grievance", self.doc.name, "resolved_at"))
+
+
+class TestGatewayContract(FrappeTestCase):
+	"""What Kong is told about the charts: the dashboards' key, never a user token."""
+
+	def _root(self):
+		import os
+
+		return os.path.join(frappe.get_app_path("oan_grievance_service"), "..")
+
+	def _generator(self):
+		import importlib.util
+		import os
+
+		path = os.path.join(self._root(), "kong", "generate_kong_config_from_spec.py")
+		spec = importlib.util.spec_from_file_location("grievance_kong_generator", path)
+		module = importlib.util.module_from_spec(spec)
+		spec.loader.exec_module(module)
+		return module
+
+	def test_public_charts_ask_the_gateway_for_the_dashboard_key(self):
+		import os
+
+		import yaml
+
+		with open(os.path.join(self._root(), "openapi", "openapi_v1.public.yaml")) as f:
+			spec = yaml.safe_load(f)
+		for chart_id in dashboard.PUBLIC_CHARTS:
+			operation = spec["paths"][f"/api/v1/charts/{chart_id}"]["get"]
+			self.assertEqual(operation["security"], [{"DashboardKeyAuth": []}], chart_id)
+		self.assertEqual(spec["paths"]["/api/v1/charts"]["get"]["security"], [{"BearerAuth": []}])
+		self.assertEqual(spec["components"]["securitySchemes"]["DashboardKeyAuth"]["name"], "apikey")
+
+	def test_kong_puts_key_auth_and_acl_on_the_charts(self):
+		generator = self._generator()
+		routes = [
+			{**r, "tier": generator.TIER_OVERRIDES[(r["method"], r["path"])]}
+			for r in generator.spec_routes(generator.load_spec(generator.SPEC_PATH))
+			if r["path"].startswith("/api/v1/charts/")
+		]
+		self.assertEqual({r["auth"] for r in routes}, {"dashboard-key"})
+		config = generator.build_config(routes)
+		for route in config["services"][0]["routes"]:
+			plugins = {p["name"]: p["config"] for p in route["plugins"]}
+			self.assertEqual(plugins["key-auth"]["key_names"], ["apikey"])
+			self.assertTrue(plugins["key-auth"]["hide_credentials"])
+			self.assertEqual(plugins["acl"]["allow"], ["dashboards"])
+			self.assertEqual(plugins["rate-limiting"]["limit_by"], "consumer")
+		consumer = next(c for c in config["consumers"] if c["username"] == "oan-dashboards")
+		self.assertEqual(consumer["acls"], [{"group": "dashboards"}])
+		self.assertIn("DECK_OAN_DASHBOARDS_API_KEY", consumer["keyauth_credentials"][0]["key"])

@@ -2406,7 +2406,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvPerformanceKpis:
     get:
       tags:
@@ -2495,7 +2496,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvMonthlyTrend:
     get:
       tags:
@@ -2584,7 +2586,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvWeeklyTrend:
     get:
       tags:
@@ -2673,7 +2676,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvNetBacklogTrend:
     get:
       tags:
@@ -2762,7 +2766,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvStatusDistribution:
     get:
       tags:
@@ -2851,7 +2856,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvByCategory:
     get:
       tags:
@@ -2940,7 +2946,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvCategoryResolution:
     get:
       tags:
@@ -3029,7 +3036,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvResolutionRateByRegion:
     get:
       tags:
@@ -3118,7 +3126,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvSlaRisk:
     get:
       tags:
@@ -3207,7 +3216,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvPendingDuplicates:
     get:
       tags:
@@ -3296,7 +3306,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvOldestOpen:
     get:
       tags:
@@ -3385,7 +3396,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvFilterRegions:
     get:
       tags:
@@ -3474,7 +3486,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
   /api/v1/charts/grvFilterCategories:
     get:
       tags:
@@ -3563,7 +3576,8 @@ paths:
           - week
           default: month
         description: Period size for grvNetBacklogTrend
-      security: []
+      security:
+      - DashboardKeyAuth: []
 components:
   securitySchemes:
     BearerAuth:
@@ -3571,6 +3585,13 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Provide JWT access token as `Bearer <token>` in the Authorization header.
+    DashboardKeyAuth:
+      type: apiKey
+      in: header
+      name: apikey
+      description: API key of the OAN dashboards (Kong consumer `oan-dashboards`, group `dashboards`).
+        Checked and stripped by the gateway; the platform itself treats the chart routes as public, so
+        before the gateway enforces keys the header is simply ignored.
   schemas:
     ApiMeta:
       type: object

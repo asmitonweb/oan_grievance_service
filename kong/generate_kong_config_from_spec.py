@@ -41,6 +41,13 @@ TIERS = {
 		"policy": "redis",
 		"note": "Citizen self-service operations: grievance lodging, tracking, replies, messaging, reopen.",
 	},
+	"public-dashboards": {
+		"limit_by": "ip",
+		"minute": 120,
+		"hour": 3000,
+		"policy": "redis",
+		"note": "Public dashboard charts: counts from the 15-minute rollups, read by the OAN dashboards. Same as RATE_LIMIT in api/v1/charts.py.",
+	},
 	"officer-core": {
 		"limit_by": "consumer",
 		"minute": 300,
@@ -77,6 +84,26 @@ TIER_OVERRIDES = {
 	("GET", "/api/v1/attachments/{attachment_id}/download"): "citizen-intake",
 	("GET", "/api/v1/attachments/{attachment_id}/view"): "citizen-intake",
 	("DELETE", "/api/v1/attachments/{attachment_id}"): "citizen-intake",
+	("GET", "/api/v1/charts"): "officer-core",
+	**{
+		("GET", f"/api/v1/charts/{chart_id}"): "public-dashboards"
+		for chart_id in (
+			"grvKpis",
+			"grvPerformanceKpis",
+			"grvMonthlyTrend",
+			"grvWeeklyTrend",
+			"grvNetBacklogTrend",
+			"grvStatusDistribution",
+			"grvByCategory",
+			"grvCategoryResolution",
+			"grvResolutionRateByRegion",
+			"grvSlaRisk",
+			"grvPendingDuplicates",
+			"grvOldestOpen",
+			"grvFilterRegions",
+			"grvFilterCategories",
+		)
+	},
 }
 
 

@@ -1,0 +1,283 @@
+{
+  "info": {
+    "name": "Grievance Dashboard Service",
+    "description": "Aggregate chart data for the OAN programme dashboards: GET /api/v1/charts/{chart_id}.\n\nPublic: no Authorization header is sent. Rows are counts only, never a ticket number, a title, a submitter or any grievance text. Data comes from rollup tables the scheduler rebuilds every 15 minutes, and each response carries `meta.as_of`, the time of that refresh. Calls are rate limited per IP.\n\nFilters (all optional): `region` (comma-separated Region P-codes, e.g. ET04), `service_category` or `category`, `from` / `to` (YYYY-MM-DD), `month` (YYYY-MM), `granularity` (`month` or `week`). An unknown value is a 400 naming the field.\n\nThe admin endpoint (GET /api/v1/charts?charts=..., Grievance Admin) is not part of this collection. See docs/dashboard-analytics.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// A request whose name ends in '→ NNN' expects that status; every other one is a public chart.",
+          "const expected = pm.info.requestName.match(/→ (\\d{3})$/);",
+          "if (expected) {",
+          "    pm.test(`HTTP ${expected[1]}`, () => pm.response.to.have.status(Number(expected[1])));",
+          "} else {",
+          "    pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+          "    const body = pm.response.json();",
+          "    pm.test('success envelope with rows', () => {",
+          "        pm.expect(body.status).to.equal('success');",
+          "        pm.expect(body.data).to.be.an('array');",
+          "    });",
+          "    pm.test('as_of is set (the rollup has run)', () => pm.expect(body.meta && body.meta.as_of).to.be.a('string'));",
+          "    pm.test('no case detail in a public chart', () => {",
+          "        const text = JSON.stringify(body.data);",
+          "        ['ticket_number', 'title', 'submitter_display', 'description', 'assigned_dept'].forEach(k => pm.expect(text).to.not.include(`\"${k}\"`));",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. KPIs: total, awaiting action, resolved, escalated",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvKpis",
+        "description": "Total with % change since the end of last month; Awaiting Action (Submitted + Assigned + In Progress) with new this week; Resolved (Resolved + Closed) with resolved this week; open escalated cases."
+      },
+      "response": []
+    },
+    {
+      "name": "2. Performance KPIs (this month)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvPerformanceKpis",
+        "description": "Average resolution time (days), resolution rate, escalation rate and farmer satisfaction, each with its change against the previous month. A value is null when its denominator is zero."
+      },
+      "response": []
+    },
+    {
+      "name": "3. Performance KPIs for a given month",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvPerformanceKpis?month={{grievance_month}}"
+      },
+      "response": []
+    },
+    {
+      "name": "4. Monthly submission & resolution trend",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvMonthlyTrend",
+        "description": "Six months by default; months with nothing filed are zeros."
+      },
+      "response": []
+    },
+    {
+      "name": "5. Weekly submission & resolution trend",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvWeeklyTrend",
+        "description": "Seven ISO weeks (Monday start) by default."
+      },
+      "response": []
+    },
+    {
+      "name": "6. Net backlog trend (monthly)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvNetBacklogTrend",
+        "description": "Filed, resolved and the open backlog at the end of each period."
+      },
+      "response": []
+    },
+    {
+      "name": "7. Net backlog trend (weekly)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvNetBacklogTrend?granularity=week"
+      },
+      "response": []
+    },
+    {
+      "name": "8. Status distribution",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvStatusDistribution",
+        "description": "Every workflow state except Draft, zeros included, in lifecycle order."
+      },
+      "response": []
+    },
+    {
+      "name": "9. By service category",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvByCategory"
+      },
+      "response": []
+    },
+    {
+      "name": "10. Category resolution: on time vs breached",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvCategoryResolution",
+        "description": "Filed and resolved per category in the window, resolved split by SLA outcome."
+      },
+      "response": []
+    },
+    {
+      "name": "11. Resolution rate by region",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvResolutionRateByRegion"
+      },
+      "response": []
+    },
+    {
+      "name": "12. SLA risk: at risk, breached, escalated",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvSlaRisk",
+        "description": "Open cases due within 24 hours, past their due date, and escalated. A case can be in more than one bucket."
+      },
+      "response": []
+    },
+    {
+      "name": "13. Pending duplicate review",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvPendingDuplicates"
+      },
+      "response": []
+    },
+    {
+      "name": "14. Oldest open case (age only)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvOldestOpen",
+        "description": "Age in days of the longest-open, non-escalated case. The public view never names the case."
+      },
+      "response": []
+    },
+    {
+      "name": "15. Filter options: regions",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvFilterRegions"
+      },
+      "response": []
+    },
+    {
+      "name": "16. Filter options: categories",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvFilterCategories"
+      },
+      "response": []
+    },
+    {
+      "name": "17. KPIs narrowed to one region",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvKpis?region={{grievance_region}}"
+      },
+      "response": []
+    },
+    {
+      "name": "18. KPIs narrowed to one category",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvKpis?category={{grievance_category}}",
+        "description": "`category` is accepted as an alias of `service_category`; the OAN dashboards send it under that name."
+      },
+      "response": []
+    },
+    {
+      "name": "19. Monthly trend for a date range",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvMonthlyTrend?from={{grievance_from}}&to={{grievance_to}}"
+      },
+      "response": []
+    },
+    {
+      "name": "20. Unknown region → 400",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvKpis?region=XX99"
+      },
+      "response": []
+    },
+    {
+      "name": "21. Invalid date → 400",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvMonthlyTrend?from=2026-13-01"
+      },
+      "response": []
+    },
+    {
+      "name": "22. Admin-only chart is not public → 401",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts/grvRecent",
+        "description": "Recent grievances carry ticket numbers and titles, so they are only on the admin endpoint."
+      },
+      "response": []
+    },
+    {
+      "name": "23. Admin endpoint needs a token → 401",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v1/charts?charts=grvKpis"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "grievance_region",
+      "value": "ET14"
+    },
+    {
+      "key": "grievance_category",
+      "value": "Inputs"
+    },
+    {
+      "key": "grievance_month",
+      "value": "2026-08"
+    },
+    {
+      "key": "grievance_from",
+      "value": "2026-07-01"
+    },
+    {
+      "key": "grievance_to",
+      "value": "2026-09-30"
+    }
+  ]
+}

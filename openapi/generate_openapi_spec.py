@@ -1064,6 +1064,22 @@ REQ["BlockSubmitterRequest"] = OBJ(
 )
 
 
+# Dashboard charts. Rows differ per chart and are documented on each route; each is
+# a flat object of counts, codes and labels, never case detail on the public routes.
+data(
+	"DashboardChartRow",
+	OBJ({}, additionalProperties=True, description="One row of a chart; the keys depend on the chart"),
+)
+data(
+	"DashboardChartsData",
+	OBJ(
+		{},
+		additionalProperties={**ARR(REF("DashboardChartRow")), "nullable": True},
+		description="Rows per requested chart id; null for a chart that failed (see meta.errors)",
+	),
+)
+
+
 # ---------------------------------------------------------------------------
 # Envelope Builder Helper
 # ---------------------------------------------------------------------------
@@ -1126,6 +1142,14 @@ ENVELOPES = {
 	"GrievanceDetailResponse": make_envelope("GrievanceDetailData", description="Grievance details response"),
 	"GrievanceOptionsResponse": make_envelope(
 		"GrievanceOptionsData", description="Grievance options response"
+	),
+	"DashboardChartResponse": make_envelope(
+		"DashboardChartRow",
+		is_list=True,
+		description="Rows of one public dashboard chart; meta.as_of is the rollup time",
+	),
+	"DashboardChartsResponse": make_envelope(
+		"DashboardChartsData", description="Rows per chart; meta.as_of and meta.errors per chart"
 	),
 	"GrievanceStatusSummaryResponse": make_envelope(
 		"GrievanceStatusSummaryData", description="KPI status card counts"
@@ -1357,6 +1381,50 @@ QP: dict[str, list[dict[str, Any]]] = {
 			"description": "Maximum records returned",
 		},
 	],
+	"DashboardChart": [
+		{
+			"name": "region",
+			"in": "query",
+			"required": False,
+			"schema": S(),
+			"description": "Comma-separated Region P-codes (e.g. ET04)",
+		},
+		{
+			"name": "service_category",
+			"in": "query",
+			"required": False,
+			"schema": S(),
+			"description": "Comma-separated service category names; `category` is accepted as an alias",
+		},
+		{
+			"name": "from",
+			"in": "query",
+			"required": False,
+			"schema": S(format="date"),
+			"description": "Period start (trend and category-resolution charts)",
+		},
+		{
+			"name": "to",
+			"in": "query",
+			"required": False,
+			"schema": S(format="date"),
+			"description": "Period end, default today",
+		},
+		{
+			"name": "month",
+			"in": "query",
+			"required": False,
+			"schema": S(pattern=r"^\d{4}-\d{2}$"),
+			"description": "YYYY-MM for grvPerformanceKpis, default the current month",
+		},
+		{
+			"name": "granularity",
+			"in": "query",
+			"required": False,
+			"schema": S(enum=["month", "week"], default="month"),
+			"description": "Period size for grvNetBacklogTrend",
+		},
+	],
 	"ViewAttachment": [
 		{
 			"name": "download",
@@ -1367,6 +1435,32 @@ QP: dict[str, list[dict[str, Any]]] = {
 		}
 	],
 }
+
+# The admin form takes several charts at once and two filters the public one does not.
+QP["DashboardCharts"] = [
+	{
+		"name": "charts",
+		"in": "query",
+		"required": False,
+		"schema": S(),
+		"description": "Comma-separated chart ids (at most 20); all charts when omitted",
+	},
+	*QP["DashboardChart"],
+	{
+		"name": "assigned_dept",
+		"in": "query",
+		"required": False,
+		"schema": S(),
+		"description": "Comma-separated department names",
+	},
+	{
+		"name": "limit",
+		"in": "query",
+		"required": False,
+		"schema": I(minimum=1, maximum=50, default=10),
+		"description": "Rows for grvRecent",
+	},
+]
 
 
 # ---------------------------------------------------------------------------
@@ -1379,6 +1473,7 @@ def _import_all_api_modules() -> None:
 		"oan_grievance_service.api.v1.administrative_area",
 		"oan_grievance_service.api.v1.attachment",
 		"oan_grievance_service.api.v1.change_request",
+		"oan_grievance_service.api.v1.charts",
 		"oan_grievance_service.api.v1.draft",
 		"oan_grievance_service.api.v1.grievance",
 		"oan_grievance_service.api.v1.profile",
@@ -1394,6 +1489,8 @@ def _import_all_api_modules() -> None:
 def _determine_tag(path: str, func_name: str) -> str:
 	if "/health" in path or "/ping" in path:
 		return "Health & Monitoring"
+	if path.startswith("/api/v1/charts"):
+		return "Dashboard Charts"
 	if path.startswith("/api/v1/submitters"):
 		return "Submitter Management"
 	if path.startswith("/api/v1/administrative-areas"):
@@ -1413,6 +1510,8 @@ def _determine_tag(path: str, func_name: str) -> str:
 
 
 def _determine_response(func_name: str, path: str, method: str) -> str | None:
+	if func_name.startswith("get_public_chart_"):
+		return "DashboardChartResponse"
 	mapping = {
 		"get_health": "HealthResponse",
 		"get_ping": "PingResponse",
@@ -1428,6 +1527,7 @@ def _determine_response(func_name: str, path: str, method: str) -> str | None:
 		"defer_sla": "GrievanceChangeResponse",
 		"anonymity_decision": "GrievanceChangeResponse",
 		"summary": "GrievanceStatusSummaryResponse",
+		"get_charts": "DashboardChartsResponse",
 		"options": "SubmitterOptionsResponse" if "submitters" in path else "GrievanceOptionsResponse",
 		"me": "SubmitterProfileResponse",
 		"submit_documents": "AttachmentUploadResponse",
@@ -1519,6 +1619,10 @@ def build_openapi() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
 					parameters.extend(QP["ListChangeRequests"])
 				elif func_name == "view":
 					parameters.extend(QP["ViewAttachment"])
+				elif func_name == "get_charts":
+					parameters.extend(QP["DashboardCharts"])
+				elif func_name.startswith("get_public_chart_"):
+					parameters.extend(QP["DashboardChart"])
 
 			response_schema_name = _determine_response(func_name, openapi_path, method)
 			resp_content_type = "*/*" if func_name == "view" else "application/json"

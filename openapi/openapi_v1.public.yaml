@@ -32,6 +32,7 @@ tags:
   description: Communication threads, notes, reopen, reject, escalate, and resolution confirmation
 - name: Attachments
   description: Supporting document and evidence upload, listing, download, and deletion
+- name: Dashboard Charts
 paths:
   /api/v1/grievances/health:
     get:
@@ -2201,6 +2202,1368 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/BlockSubmitterRequest'
+  /api/v1/charts:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Dashboard charts (Grievance Admin)
+      description: 'Several charts in one round trip, each built and cached on its own.
+
+
+        A chart that fails comes back as `data[<id>] = null` with its error in
+
+        `meta.errors`, so one broken tile does not blank the dashboard.'
+      operationId: get_api_v1_charts
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartsResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: charts
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated chart ids (at most 20); all charts when omitted
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      - name: assigned_dept
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated department names
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+        description: Rows for grvRecent
+      security:
+      - BearerAuth: []
+  /api/v1/charts/grvKpis:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvKpis (counts only)
+      description: Public dashboard chart grvKpis (counts only)
+      operationId: get_api_v1_charts_grvKpis
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvPerformanceKpis:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvPerformanceKpis (counts only)
+      description: Public dashboard chart grvPerformanceKpis (counts only)
+      operationId: get_api_v1_charts_grvPerformanceKpis
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvMonthlyTrend:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvMonthlyTrend (counts only)
+      description: Public dashboard chart grvMonthlyTrend (counts only)
+      operationId: get_api_v1_charts_grvMonthlyTrend
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvWeeklyTrend:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvWeeklyTrend (counts only)
+      description: Public dashboard chart grvWeeklyTrend (counts only)
+      operationId: get_api_v1_charts_grvWeeklyTrend
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvNetBacklogTrend:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvNetBacklogTrend (counts only)
+      description: Public dashboard chart grvNetBacklogTrend (counts only)
+      operationId: get_api_v1_charts_grvNetBacklogTrend
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvStatusDistribution:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvStatusDistribution (counts only)
+      description: Public dashboard chart grvStatusDistribution (counts only)
+      operationId: get_api_v1_charts_grvStatusDistribution
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvByCategory:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvByCategory (counts only)
+      description: Public dashboard chart grvByCategory (counts only)
+      operationId: get_api_v1_charts_grvByCategory
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvCategoryResolution:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvCategoryResolution (counts only)
+      description: Public dashboard chart grvCategoryResolution (counts only)
+      operationId: get_api_v1_charts_grvCategoryResolution
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvResolutionRateByRegion:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvResolutionRateByRegion (counts only)
+      description: Public dashboard chart grvResolutionRateByRegion (counts only)
+      operationId: get_api_v1_charts_grvResolutionRateByRegion
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvSlaRisk:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvSlaRisk (counts only)
+      description: Public dashboard chart grvSlaRisk (counts only)
+      operationId: get_api_v1_charts_grvSlaRisk
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvPendingDuplicates:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvPendingDuplicates (counts only)
+      description: Public dashboard chart grvPendingDuplicates (counts only)
+      operationId: get_api_v1_charts_grvPendingDuplicates
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvOldestOpen:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvOldestOpen (counts only)
+      description: Public dashboard chart grvOldestOpen (counts only)
+      operationId: get_api_v1_charts_grvOldestOpen
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvFilterRegions:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvFilterRegions (counts only)
+      description: Public dashboard chart grvFilterRegions (counts only)
+      operationId: get_api_v1_charts_grvFilterRegions
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
+  /api/v1/charts/grvFilterCategories:
+    get:
+      tags:
+      - Dashboard Charts
+      summary: Public dashboard chart grvFilterCategories (counts only)
+      description: Public dashboard chart grvFilterCategories (counts only)
+      operationId: get_api_v1_charts_grvFilterCategories
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardChartResponse'
+        '400':
+          description: Validation or Bad Input Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '401':
+          description: Unauthorized / Authentication Required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '403':
+          description: Forbidden / Insufficient Role Scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardErrorResponse'
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated Region P-codes (e.g. ET04)
+      - name: service_category
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Comma-separated service category names; `category` is accepted as an alias
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period start (trend and category-resolution charts)
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: Period end, default today
+      - name: month
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        description: YYYY-MM for grvPerformanceKpis, default the current month
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: Period size for grvNetBacklogTrend
+      security: []
 components:
   securitySchemes:
     BearerAuth:
@@ -4699,3 +6062,69 @@ components:
       - status
       - data
       description: Attachment deletion response
+    DashboardChartRow:
+      type: object
+      properties: {}
+      additionalProperties: true
+      description: One row of a chart; the keys depend on the chart
+    DashboardChartsData:
+      type: object
+      properties: {}
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/DashboardChartRow'
+        nullable: true
+      description: Rows per requested chart id; null for a chart that failed (see meta.errors)
+    DashboardChartResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+          enum:
+          - success
+        message:
+          type: string
+          nullable: true
+          description: Optional response message
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardChartRow'
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+        request_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Tracing correlation ID
+      required:
+      - status
+      - data
+      description: Rows of one public dashboard chart; meta.as_of is the rollup time
+    DashboardChartsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+          enum:
+          - success
+        message:
+          type: string
+          nullable: true
+          description: Optional response message
+        data:
+          $ref: '#/components/schemas/DashboardChartsData'
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+        request_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Tracing correlation ID
+      required:
+      - status
+      - data
+      description: Rows per chart; meta.as_of and meta.errors per chart

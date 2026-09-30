@@ -18,6 +18,13 @@ STATE_RESOLVED = "Resolved"
 STATE_CLOSED = "Closed"
 STATE_REJECTED = "Rejected"
 
+# The groups the dashboards count by. Awaiting Action is every state in which an
+# officer owes the next move; More Info Needed waits on the submitter, so it is
+# open but not awaiting. Resolved on the dashboards means Resolved or Closed.
+AWAITING_ACTION_STATES = (STATE_SUBMITTED, STATE_ASSIGNED, STATE_IN_PROGRESS)
+OPEN_STATES = (*AWAITING_ACTION_STATES, STATE_MORE_INFO_NEEDED)
+RESOLVED_STATES = (STATE_RESOLVED, STATE_CLOSED)
+
 
 # Notification event codes. Each is the "method" on one core Notification record per
 # channel, seeded by setup/install.py and editable from the desk thereafter.

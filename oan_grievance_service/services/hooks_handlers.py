@@ -62,6 +62,7 @@ def after_workflow_action(doc, from_state):
 
 	sla.on_status_change(doc, to_state)
 	sla.arm_state_timer(doc, to_state)
+	stamp_resolution(doc, to_state)
 
 	if context.get("notify", True):
 		if to_state == C.STATE_IN_PROGRESS:
@@ -82,6 +83,20 @@ def after_workflow_action(doc, from_state):
 				notifications.queue(doc, C.EVENT_CLOSED)
 		elif to_state == C.STATE_REJECTED:
 			notifications.queue(doc, C.EVENT_STATUS_REJECTED)
+
+
+def stamp_resolution(doc, to_state):
+	"""Keep `resolved_at` on the moment the case last reached Resolved or Closed.
+
+	Resolved then Closed keeps the first stamp: the case was resolved when the
+	officer resolved it, not when the confirmation window ran out. A reopen clears
+	it, so a case resolved twice counts once, on the day it was finally resolved.
+	"""
+	if to_state in C.RESOLVED_STATES:
+		if not doc.resolved_at:
+			doc.db_set("resolved_at", now_datetime(), update_modified=False)
+	elif doc.resolved_at and to_state != C.STATE_REJECTED:
+		doc.db_set("resolved_at", None, update_modified=False)
 
 
 def response_after_insert(doc, method=None):

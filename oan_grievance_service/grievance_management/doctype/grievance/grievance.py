@@ -394,3 +394,8 @@ def on_doctype_update():
 	frappe.db.add_index("Grievance", ["status", "sla_due_date"])
 	frappe.db.add_index("Grievance", ["assigned_to", "status"])
 	frappe.db.add_index("Grievance", ["submitter", "status"])
+	# The dashboard rollup counts events by the day they happened; each refresh
+	# reads only the last few days of each, so each needs its own index.
+	frappe.db.add_index("Grievance", ["creation"])
+	frappe.db.add_index("Grievance", ["resolved_at"])
+	frappe.db.add_index("Grievance", ["escalated_at"])

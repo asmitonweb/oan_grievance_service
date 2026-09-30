@@ -58,6 +58,8 @@
   "reminder_50_sent",
   "reminder_80_sent",
   "next_escalation_at",
+  "escalated_at",
+  "resolved_at",
   "sec_closure",
   "state_deadline",
   "reopen_count",
@@ -439,6 +441,24 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
+   "description": "When the case first escalated. Kept after a response clears the Escalated flag, so escalation rates count each case once.",
+   "fieldname": "escalated_at",
+   "fieldtype": "Datetime",
+   "label": "First Escalated At",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "When the case reached Resolved or Closed. Cleared if the case is reopened, and set again when it is next resolved.",
+   "fieldname": "resolved_at",
+   "fieldtype": "Datetime",
+   "label": "Resolved At",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
    "fieldname": "sec_closure",
    "fieldtype": "Section Break",
    "label": "Closure and Feedback"
@@ -489,7 +509,7 @@
  "is_submittable": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2026-09-03 19:13:24.197198",
+ "modified": "2026-09-30 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Grievance Management",
  "name": "Grievance",
